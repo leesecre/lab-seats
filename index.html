@@ -96,7 +96,7 @@ kbd{font:inherit;font-size:12px;border:1px solid var(--muted);border-radius:4px;
 .rhead{display:flex;align-items:center;gap:10px;margin:0 0 8px;min-height:30px}
 .room h2{margin:0;display:inline-block;font-size:26px;font-weight:700;line-height:1.1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
 .room.has-hit h2{box-shadow:inset 0 -.32em 0 var(--sign)}
-.plan{position:relative;background:var(--floor);border:2.5px solid var(--line);flex:none}
+.plan{position:relative;background:var(--floor);border:2.5px solid var(--line);flex:none;width:var(--pw)}
 .plan svg.door{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 .door path{fill:var(--paper);stroke:var(--line);stroke-width:1.5}
 .room.place .plan{display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;
@@ -146,7 +146,33 @@ body.swapping .desk{cursor:crosshair}
 
 .toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:40;background:var(--plate);color:var(--plate-ink);padding:10px 16px;border-radius:8px;font-size:14px;max-width:calc(100% - 32px)}
 
+/* phones: mini map + stacked rooms */
+.preview,.browse-map{display:none}
+.minimap{display:block;width:100%;height:auto;max-height:260px;margin:0 auto;font-family:inherit}
+.mm-walk{fill:var(--paper);stroke:var(--muted);stroke-width:.03;stroke-dasharray:.08 .06}
+.mm-room rect{fill:var(--floor);stroke:var(--line);stroke-width:.04}
+.mm-room.place rect{fill:var(--paper)}
+.mm-room text{font-size:.36px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.mm-room.place text{font-weight:500;fill:var(--muted)}
+.mm-room text.sm{font-size:.28px}
+.mm-room.on rect{fill:var(--sign)}
+.mm-room.on text{fill:var(--sign-ink)}
+[data-go]{cursor:pointer}
 @media (max-width:760px){
+  .kbd-hint,.meta-when{display:none}
+  .preview{display:flex;flex-direction:column;gap:16px;margin-top:6px}
+  .preview .rhead{display:none}
+  .browse-map{display:block;background:var(--desk);border:1.5px solid var(--line);border-radius:10px;padding:12px}
+  .browse-map .sec-label{margin:0 0 8px}
+  .scroller{overflow:visible;margin:0;padding:0}
+  .floor{display:flex;flex-direction:column;gap:32px;min-width:0}
+  .frow{flex-direction:column;align-items:stretch!important;gap:32px}
+  .frow > .room + .room{margin-left:0}
+  .corridor,.gap,.room.place{display:none}
+  .plan{width:min(100%, calc(var(--pw) * 1.4))}
+  .desk{font-size:14px}
+  .desk.long{font-size:11px}
+
   .wrap{padding:20px 16px 120px}
   .finder{grid-template-columns:1fr;margin-bottom:28px}
   .answer{min-height:0}
@@ -158,7 +184,7 @@ body.swapping .desk{cursor:crosshair}
 </head>
 <body>
 <div id="app"></div>
-<script id="seat-data" type="application/json">{"title":"2026 자리 배치도","source":"2026_자리_배치도.pptx","updatedAt":null,"rooms":[{"id":"r407","label":"407호","w":1.16,"h":2.44,"door":{"x":1.16,"y":2.43,"r":0.27,"q":"ul"},"desks":[{"id":"a1","x":0.49,"y":0.32,"w":0.67,"h":0.29,"name":"오창훈"},{"id":"a2","x":0,"y":0.73,"w":0.33,"h":0.63,"name":"박수빈"},{"id":"a3","x":0.83,"y":0.73,"w":0.33,"h":0.63,"name":"예현수"},{"id":"a4","x":0,"y":1.35,"w":0.33,"h":0.63,"name":"이창준"},{"id":"a5","x":0.83,"y":1.35,"w":0.33,"h":0.63,"name":"전종욱"}],"kind":"seats"},{"id":"r408","label":"408호","w":2.19,"h":2.9,"door":{"x":1.33,"y":0,"r":0.27,"q":"dr"},"desks":[{"id":"b1","x":1.41,"y":2.27,"w":0.33,"h":0.63,"name":"김홍진"},{"id":"b2","x":1.08,"y":2.27,"w":0.33,"h":0.63,"name":"김민주"},{"id":"b3","x":0.26,"y":2.27,"w":0.33,"h":0.63,"name":"정성훈"},{"id":"b4","x":1.52,"y":1.68,"w":0.67,"h":0.29,"name":"정시우"},{"id":"b5","x":0.59,"y":1.51,"w":0.67,"h":0.29,"name":"김수환"},{"id":"b6","x":0.26,"y":1.5,"w":0.33,"h":0.63,"name":"김윤성"},{"id":"b7","x":1.52,"y":1.12,"w":0.67,"h":0.29,"name":"전상인"},{"id":"b8","x":0.59,"y":0.76,"w":0.67,"h":0.29,"name":"한예림"},{"id":"b9","x":0.26,"y":0.75,"w":0.33,"h":0.63,"name":"구인회"},{"id":"b10","x":1.52,"y":0.46,"w":0.67,"h":0.29,"name":"곽찬신"},{"id":"b11","x":0.26,"y":0,"w":0.33,"h":0.63,"name":"황영민"}],"kind":"seats"},{"id":"r409","label":"409호","w":2.19,"h":2.9,"door":{"x":1.36,"y":0,"r":0.27,"q":"dr"},"desks":[{"id":"g1","x":1.64,"y":2.27,"w":0.33,"h":0.63,"name":"임승재"},{"id":"g2","x":1.31,"y":2.27,"w":0.33,"h":0.63,"name":"위준봉"},{"id":"g3","x":0.59,"y":2.27,"w":0.33,"h":0.63,"name":"최광훈"},{"id":"g4","x":0.26,"y":2.27,"w":0.33,"h":0.63,"name":"안준호"},{"id":"g5","x":0,"y":1.71,"w":0.67,"h":0.29,"name":"이재현"},{"id":"g6","x":1.52,"y":1.52,"w":0.67,"h":0.29,"name":"이유빈"},{"id":"g7","x":0.85,"y":1.52,"w":0.67,"h":0.29,"name":"조재홍"},{"id":"g8","x":1.52,"y":1.23,"w":0.67,"h":0.29,"name":"김정현"},{"id":"g9","x":0,"y":1.11,"w":0.67,"h":0.29,"name":"이현재"},{"id":"g10","x":0,"y":0.81,"w":0.67,"h":0.29,"name":"최정원"},{"id":"g11","x":1.52,"y":0.55,"w":0.67,"h":0.29,"name":"최예원"},{"id":"g12","x":0.9,"y":0.01,"w":0.33,"h":0.63,"name":"김다은"},{"id":"g13","x":0,"y":0.02,"w":0.67,"h":0.29,"name":"허구슬"}],"kind":"seats"},{"id":"r410","label":"410호","w":2.19,"h":2.9,"door":{"x":0.91,"y":0,"r":0.27,"q":"dl"},"desks":[{"id":"c1","x":1.63,"y":2.27,"w":0.33,"h":0.63,"name":"정지용"},{"id":"c2","x":1.29,"y":2.27,"w":0.33,"h":0.63,"name":"엄창용"},{"id":"c3","x":0.58,"y":2.27,"w":0.33,"h":0.63,"name":"하승종"},{"id":"c4","x":0.24,"y":2.27,"w":0.33,"h":0.63,"name":"최상진"},{"id":"c5","x":1.52,"y":1.78,"w":0.67,"h":0.29,"name":"문시은"},{"id":"c6","x":0.68,"y":1.51,"w":0.67,"h":0.29,"name":"허진"},{"id":"c7","x":0.01,"y":1.51,"w":0.67,"h":0.29,"name":"조석민"},{"id":"c8","x":0.01,"y":1.22,"w":0.67,"h":0.29,"name":"김영욱"},{"id":"c9","x":1.52,"y":1.09,"w":0.67,"h":0.29,"name":"김남우"},{"id":"c10","x":1.52,"y":0.8,"w":0.67,"h":0.29,"name":""},{"id":"c11","x":0.01,"y":0.59,"w":0.67,"h":0.29,"name":"김익재"},{"id":"c12","x":1.0,"y":0,"w":0.33,"h":0.63,"name":""},{"id":"c13","x":1.52,"y":0.01,"w":0.67,"h":0.29,"name":"김주형"}],"kind":"seats"},{"id":"r411","label":"411호","w":2.19,"h":2.9,"door":{"x":1.31,"y":0,"r":0.27,"q":"dr"},"desks":[{"id":"e1","x":1.86,"y":2.27,"w":0.33,"h":0.63,"name":"이재환"},{"id":"e2","x":1.11,"y":2.27,"w":0.33,"h":0.63,"name":"황진우"},{"id":"e3","x":0.78,"y":2.27,"w":0.33,"h":0.63,"name":"김원웅"},{"id":"e4","x":0.01,"y":2.27,"w":0.33,"h":0.63,"name":"이상현"},{"id":"e5","x":0.01,"y":1.77,"w":0.67,"h":0.29,"name":"정재원"},{"id":"e6","x":1.52,"y":1.51,"w":0.67,"h":0.29,"name":"이상엽"},{"id":"e7","x":1.52,"y":1.22,"w":0.67,"h":0.29,"name":"이정인"},{"id":"e8","x":0.01,"y":1.1,"w":0.67,"h":0.29,"name":"이지민"},{"id":"e9","x":0.01,"y":0.8,"w":0.67,"h":0.29,"name":"정지영"},{"id":"e10","x":1.52,"y":0.59,"w":0.67,"h":0.29,"name":"김홍빈"},{"id":"e11","x":0.91,"y":0,"w":0.33,"h":0.63,"name":"최현민"},{"id":"e12","x":0.01,"y":0.01,"w":0.67,"h":0.29,"name":"이주현"}],"kind":"seats"},{"id":"r4413","label":"E3-1 4413호","w":2.68,"h":2.9,"door":{"x":0,"y":2.74,"r":0.27,"q":"ur"},"desks":[{"id":"f1","x":0,"y":0.23,"w":0.33,"h":0.63,"name":"Huanle Zhao"},{"id":"f2","x":1.0,"y":0,"w":0.33,"h":0.63,"name":"김동하"},{"id":"f3","x":1.34,"y":0,"w":0.33,"h":0.63,"name":"김민수"},{"id":"f4","x":2.01,"y":0,"w":0.67,"h":0.29,"name":""},{"id":"f5","x":1.34,"y":0.62,"w":0.33,"h":0.63,"name":"은승욱"},{"id":"f6","x":0,"y":1.2,"w":0.33,"h":0.63,"name":""},{"id":"f7","x":2.01,"y":1.21,"w":0.67,"h":0.29,"name":"Shuangshuang Zhao"},{"id":"f8","x":2.01,"y":1.51,"w":0.67,"h":0.29,"name":"김지훈"},{"id":"f9","x":0.95,"y":2.27,"w":0.33,"h":0.63,"name":""},{"id":"f10","x":1.69,"y":2.27,"w":0.33,"h":0.63,"name":"이장건"},{"id":"f11","x":2.01,"y":2.6,"w":0.67,"h":0.29,"name":"장민성"}],"kind":"seats"},{"id":"p-kwon","label":"권교수님방","kind":"place","w":1.1,"h":2.44,"desks":[]},{"id":"p-park","label":"박교수님방","kind":"place","w":1.1,"h":2.44,"desks":[]},{"id":"p-heo","label":"허교수님방","kind":"place","w":1.1,"h":2.44,"desks":[]},{"id":"p-admin","label":"행정실","kind":"place","w":1.2,"h":2.44,"desks":[]},{"id":"p-seminar","label":"세미나실","kind":"place","w":1.17,"h":2.44,"desks":[]}],"layout":{"sections":[{"rows":[[{"gap":1.97},"r407","p-kwon","p-park","p-heo","p-admin","p-seminar"],"corridor",["r408","r409","r410","r411"]]},{"label":"따로 떨어진 방","rows":[["r4413"]]}]},"homepage":{"label":"CASys Lab 홈페이지","url":"https://casyslab.kaist.ac.kr/home"},"advisors":{"이상현":"허","이주현":"허","정지영":"허","김홍빈":"허","이지민":"허","정재원":"허","이재환":"권","김원웅":"박","최현민":"박","이상엽":"박","이정인":"박","황진우":"박"},"advisorOrder":["권","박","허"]}</script>
+<script id="seat-data" type="application/json">{"title":"2026 자리 배치도","source":"2026_자리_배치도.pptx","updatedAt":null,"rooms":[{"id":"r407","label":"407호","w":1.16,"h":2.44,"door":{"x":1.16,"y":2.43,"r":0.27,"q":"ul"},"desks":[{"id":"a1","x":0.49,"y":0.32,"w":0.67,"h":0.29,"name":"오창훈"},{"id":"a2","x":0,"y":0.73,"w":0.33,"h":0.63,"name":"박수빈"},{"id":"a3","x":0.83,"y":0.73,"w":0.33,"h":0.63,"name":"예현수"},{"id":"a4","x":0,"y":1.35,"w":0.33,"h":0.63,"name":"이창준"},{"id":"a5","x":0.83,"y":1.35,"w":0.33,"h":0.63,"name":"전종욱"}],"kind":"seats"},{"id":"r408","label":"408호","w":2.19,"h":2.9,"door":{"x":1.33,"y":0,"r":0.27,"q":"dr"},"desks":[{"id":"b1","x":1.41,"y":2.27,"w":0.33,"h":0.63,"name":"김홍진"},{"id":"b2","x":1.08,"y":2.27,"w":0.33,"h":0.63,"name":"김민주"},{"id":"b3","x":0.26,"y":2.27,"w":0.33,"h":0.63,"name":"정성훈"},{"id":"b4","x":1.52,"y":1.68,"w":0.67,"h":0.29,"name":"정시우"},{"id":"b5","x":0.59,"y":1.51,"w":0.67,"h":0.29,"name":"김수환"},{"id":"b6","x":0.26,"y":1.5,"w":0.33,"h":0.63,"name":"김윤성"},{"id":"b7","x":1.52,"y":1.12,"w":0.67,"h":0.29,"name":"전상인"},{"id":"b8","x":0.59,"y":0.76,"w":0.67,"h":0.29,"name":"한예림"},{"id":"b9","x":0.26,"y":0.75,"w":0.33,"h":0.63,"name":"구인회"},{"id":"b10","x":1.52,"y":0.46,"w":0.67,"h":0.29,"name":"곽찬신"},{"id":"b11","x":0.26,"y":0,"w":0.33,"h":0.63,"name":"황영민"}],"kind":"seats"},{"id":"r409","label":"409호","w":2.19,"h":2.9,"door":{"x":1.36,"y":0,"r":0.27,"q":"dr"},"desks":[{"id":"g1","x":1.64,"y":2.27,"w":0.33,"h":0.63,"name":"임승재"},{"id":"g2","x":1.31,"y":2.27,"w":0.33,"h":0.63,"name":"위준봉"},{"id":"g3","x":0.59,"y":2.27,"w":0.33,"h":0.63,"name":"최광훈"},{"id":"g4","x":0.26,"y":2.27,"w":0.33,"h":0.63,"name":"안준호"},{"id":"g5","x":0,"y":1.71,"w":0.67,"h":0.29,"name":"이재현"},{"id":"g6","x":1.52,"y":1.52,"w":0.67,"h":0.29,"name":"이유빈"},{"id":"g7","x":0.85,"y":1.52,"w":0.67,"h":0.29,"name":"조재홍"},{"id":"g8","x":1.52,"y":1.23,"w":0.67,"h":0.29,"name":"김정현"},{"id":"g9","x":0,"y":1.11,"w":0.67,"h":0.29,"name":"이현재"},{"id":"g10","x":0,"y":0.81,"w":0.67,"h":0.29,"name":"최정원"},{"id":"g11","x":1.52,"y":0.55,"w":0.67,"h":0.29,"name":"최예원"},{"id":"g12","x":0.9,"y":0.01,"w":0.33,"h":0.63,"name":"김다은"},{"id":"g13","x":0,"y":0.02,"w":0.67,"h":0.29,"name":"허구슬"}],"kind":"seats"},{"id":"r410","label":"410호","w":2.19,"h":2.9,"door":{"x":0.91,"y":0,"r":0.27,"q":"dl"},"desks":[{"id":"c1","x":1.63,"y":2.27,"w":0.33,"h":0.63,"name":"정지용"},{"id":"c2","x":1.29,"y":2.27,"w":0.33,"h":0.63,"name":"엄창용"},{"id":"c3","x":0.58,"y":2.27,"w":0.33,"h":0.63,"name":"하승종"},{"id":"c4","x":0.24,"y":2.27,"w":0.33,"h":0.63,"name":"최상진"},{"id":"c5","x":1.52,"y":1.78,"w":0.67,"h":0.29,"name":"문시은"},{"id":"c6","x":0.68,"y":1.51,"w":0.67,"h":0.29,"name":"허진"},{"id":"c7","x":0.01,"y":1.51,"w":0.67,"h":0.29,"name":"조석민"},{"id":"c8","x":0.01,"y":1.22,"w":0.67,"h":0.29,"name":"김영욱"},{"id":"c9","x":1.52,"y":1.09,"w":0.67,"h":0.29,"name":"김남우"},{"id":"c10","x":1.52,"y":0.8,"w":0.67,"h":0.29,"name":""},{"id":"c11","x":0.01,"y":0.59,"w":0.67,"h":0.29,"name":"김익재"},{"id":"c12","x":1.0,"y":0,"w":0.33,"h":0.63,"name":""},{"id":"c13","x":1.52,"y":0.01,"w":0.67,"h":0.29,"name":"김주형"}],"kind":"seats"},{"id":"r411","label":"411호","w":2.19,"h":2.9,"door":{"x":1.31,"y":0,"r":0.27,"q":"dr"},"desks":[{"id":"e1","x":1.86,"y":2.27,"w":0.33,"h":0.63,"name":"이재환"},{"id":"e2","x":1.11,"y":2.27,"w":0.33,"h":0.63,"name":"황진우"},{"id":"e3","x":0.78,"y":2.27,"w":0.33,"h":0.63,"name":"김원웅"},{"id":"e4","x":0.01,"y":2.27,"w":0.33,"h":0.63,"name":"이상현"},{"id":"e5","x":0.01,"y":1.77,"w":0.67,"h":0.29,"name":"정재원"},{"id":"e6","x":1.52,"y":1.51,"w":0.67,"h":0.29,"name":"이상엽"},{"id":"e7","x":1.52,"y":1.22,"w":0.67,"h":0.29,"name":"이정인"},{"id":"e8","x":0.01,"y":1.1,"w":0.67,"h":0.29,"name":"이지민"},{"id":"e9","x":0.01,"y":0.8,"w":0.67,"h":0.29,"name":"정지영"},{"id":"e10","x":1.52,"y":0.59,"w":0.67,"h":0.29,"name":"김홍빈"},{"id":"e11","x":0.91,"y":0,"w":0.33,"h":0.63,"name":"최현민"},{"id":"e12","x":0.01,"y":0.01,"w":0.67,"h":0.29,"name":"이주현"}],"kind":"seats"},{"id":"r4413","label":"E3-1 4413호","w":2.68,"h":2.9,"door":{"x":0,"y":2.74,"r":0.27,"q":"ur"},"desks":[{"id":"f1","x":0,"y":0.23,"w":0.33,"h":0.63,"name":"Huanle Zhao"},{"id":"f2","x":1.0,"y":0,"w":0.33,"h":0.63,"name":"김동하"},{"id":"f3","x":1.34,"y":0,"w":0.33,"h":0.63,"name":"김민수"},{"id":"f4","x":2.01,"y":0,"w":0.67,"h":0.29,"name":""},{"id":"f5","x":1.34,"y":0.62,"w":0.33,"h":0.63,"name":"은승욱"},{"id":"f6","x":0,"y":1.2,"w":0.33,"h":0.63,"name":""},{"id":"f7","x":2.01,"y":1.21,"w":0.67,"h":0.29,"name":"Shuangshuang Zhao"},{"id":"f8","x":2.01,"y":1.51,"w":0.67,"h":0.29,"name":"김지훈"},{"id":"f9","x":0.95,"y":2.27,"w":0.33,"h":0.63,"name":""},{"id":"f10","x":1.69,"y":2.27,"w":0.33,"h":0.63,"name":"이장건"},{"id":"f11","x":2.01,"y":2.6,"w":0.67,"h":0.29,"name":"장민성"}],"kind":"seats"},{"id":"p-kwon","label":"권교수님방","kind":"place","w":1.1,"h":2.44,"desks":[]},{"id":"p-park","label":"박교수님방","kind":"place","w":1.1,"h":2.44,"desks":[]},{"id":"p-heo","label":"허교수님방","kind":"place","w":1.1,"h":2.44,"desks":[]},{"id":"p-admin","label":"행정실","kind":"place","w":1.2,"h":2.44,"desks":[]},{"id":"p-seminar","label":"세미나실","kind":"place","w":1.17,"h":2.44,"desks":[]}],"layout":{"sections":[{"rows":[[{"gap":1.97},"r407","p-kwon","p-park","p-heo","p-admin","p-seminar"],"corridor",["r408","r409","r410","r411"]]},{"label":"따로 떨어진 방","rows":[["r4413"]]}],"mini":{"extra":[{"room":"r4413","x":-1.01,"y":-2.9}],"walk":[[-1.4,-1.3,0.39,1.3]]}},"homepage":{"label":"CASys Lab 홈페이지","url":"https://casyslab.kaist.ac.kr/home"},"advisors":{"이상현":"허","이주현":"허","정지영":"허","김홍빈":"허","이지민":"허","정재원":"허","이재환":"권","김원웅":"박","최현민":"박","이상엽":"박","이정인":"박","황진우":"박"},"advisorOrder":["권","박","허"]}</script>
 <script id="app-script">
 (function () {
   "use strict";
@@ -244,7 +270,7 @@ body.swapping .desk{cursor:crosshair}
       '<section class="finder" aria-label="이름 검색">' +
       '<div class="field"><div class="box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>' +
       '<input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="이름을 입력하세요" aria-label="학생 이름"></div>' +
-      '<p class="hint">초성으로도 찾을 수 있어요. 예: ㄱㄷㅎ. 어디서든 <kbd>/</kbd> 키로 검색창에 갈 수 있습니다.</p></div>' +
+      '<p class="hint">초성으로도 찾을 수 있어요. 예: ㄱㄷㅎ<span class="kbd-hint">. 어디서든 <kbd>/</kbd> 키로 검색창에 갈 수 있습니다</span>.</p></div>' +
       '<div class="answer" id="answer" aria-live="polite"></div>' +
       '</section>' +
       '<main class="rooms" id="rooms"></main>' +
@@ -266,7 +292,9 @@ body.swapping .desk{cursor:crosshair}
     var st = stats(), parts = st.rooms + "개 방, " + st.n + "명";
     if (st.e) parts += ", 빈 자리 " + st.e + "개";
     var when = data.updatedAt ? fmtDate(data.updatedAt) + " 수정" : "원본 " + (data.source || "");
-    document.getElementById("meta").textContent = parts + ". " + when;
+    var meta = document.getElementById("meta");
+    meta.textContent = parts;
+    var w = document.createElement("span"); w.className = "meta-when"; w.textContent = ". " + when; meta.appendChild(w);
     var tools = document.getElementById("tools");
     tools.innerHTML = "";
     if (data.homepage && /^https?:\/\//.test(data.homepage.url)) {
@@ -308,17 +336,71 @@ body.swapping .desk{cursor:crosshair}
       if (res.length > 12) html += '<span class="hint" style="margin:0 4px">외 ' + (res.length - 12) + '명</span>';
       html += '</div>';
     }
+    if (!editing) {
+      var hits = {}, hr = {}; hr[f.room.id] = 1; if (f.desk) hits[key(f.room, f.desk)] = 1;
+      html += '<div class="preview">' + miniMap(f.room.id, false) +
+        (f.room.kind === "place" ? "" : '<div class="preview-room">' + roomHtml(f.room, hits, hr, false, true) + '</div>') + '</div>';
+    }
     el.innerHTML = html;
     Array.prototype.forEach.call(el.querySelectorAll(".chip"), function (c) {
       c.addEventListener("click", function () { focusKey = c.getAttribute("data-k"); pulseNext = true; update(false, true); });
     });
   }
   function scrollToFocus() {
-    var d = document.querySelector('.desk[data-k="' + CSS.escape(focusKey) + '"]') ||
-      document.querySelector('.room[data-room="' + CSS.escape(focusKey.split("/")[0]) + '"] .plan');
+    if (isNarrow()) return;
+    var d = document.querySelector('#rooms .desk[data-k="' + CSS.escape(focusKey) + '"]') ||
+      document.querySelector('#rooms .room[data-room="' + CSS.escape(focusKey.split("/")[0]) + '"] .plan');
     if (!d) return; lastScrolled = focusKey;
     var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     d.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: window.innerWidth < 760 ? "center" : "nearest", inline: "center" });
+  }
+
+  function isNarrow() { return window.matchMedia("(max-width: 760px)").matches; }
+
+  /* ---------- mini floor map (phones) ---------- */
+  function floorPositions() {
+    var c = cur(), pos = {}, layout = c.layout;
+    if (!layout) return null;
+    var CH = 0.45, minX = 0, maxX = 0;
+    var main = layout.sections[0], below = false;
+    main.rows.forEach(function (row) {
+      if (row === "corridor") { below = true; return; }
+      var x = 0;
+      row.forEach(function (id) {
+        if (id && typeof id === "object") { x += id.gap || 0; return; }
+        var r = findRoom(id); if (!r) return;
+        pos[id] = { x: x, y: below ? CH : -r.h, w: r.w, h: r.h, room: r };
+        x += r.w;
+      });
+      maxX = Math.max(maxX, x);
+    });
+    var mini = layout.mini || {};
+    (mini.extra || []).forEach(function (e) {
+      var r = findRoom(e.room); if (!r) return;
+      pos[e.room] = { x: e.x, y: e.y, w: r.w, h: r.h, room: r };
+      minX = Math.min(minX, e.x);
+    });
+    (mini.walk || []).forEach(function (w) { minX = Math.min(minX, w[0]); });
+    var walk = [[minX, 0, maxX - minX, CH]].concat(mini.walk || []);
+    var minY = 0, maxY = CH;
+    Object.keys(pos).forEach(function (k) { var p = pos[k]; minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y + p.h); });
+    return { pos: pos, walk: walk, box: [minX, minY, maxX - minX, maxY - minY] };
+  }
+  function shortName(r) {
+    return r.kind === "place" ? r.label.replace(/님방$/, "") : r.label.replace(/^E3-1\s*/, "").replace(/호$/, "");
+  }
+  function miniMap(targetId, clickable) {
+    var fp = floorPositions(); if (!fp) return "";
+    var b = fp.box, pad = 0.08;
+    var s = '<svg class="minimap" viewBox="' + (b[0] - pad) + ' ' + (b[1] - pad) + ' ' + (b[2] + 2 * pad) + ' ' + (b[3] + 2 * pad) + '" role="img" aria-label="층 안내도">';
+    fp.walk.forEach(function (w) { s += '<rect class="mm-walk" x="' + w[0] + '" y="' + w[1] + '" width="' + w[2] + '" height="' + w[3] + '"/>'; });
+    Object.keys(fp.pos).forEach(function (id) {
+      var p = fp.pos[id], on = id === targetId;
+      s += '<g class="mm-room' + (p.room.kind === "place" ? " place" : "") + (on ? " on" : "") + '"' + (clickable ? ' data-go="' + esc(id) + '"' : '') + '>' +
+        '<rect x="' + p.x + '" y="' + p.y + '" width="' + p.w + '" height="' + p.h + '"/>' +
+        '<text x="' + (p.x + p.w / 2) + '" y="' + (p.y + p.h / 2) + '"' + (p.w < 1.3 ? ' class="sm"' : '') + '>' + esc(shortName(p.room)) + '</text></g>';
+    });
+    return s + '</svg>';
   }
 
   /* ---------- rooms ---------- */
@@ -329,11 +411,11 @@ body.swapping .desk{cursor:crosshair}
     if (dr.q === "ur") return "M" + x + " " + y + " L" + x + " " + top + " A" + r + " " + r + " 0 0 1 " + (x + r) + " " + y + " Z";
     return "M" + x + " " + y + " L" + x + " " + top + " A" + r + " " + r + " 0 0 0 " + (x - r) + " " + y + " Z";
   }
-  function roomHtml(room, hits, hitRooms, anyQuery) {
+  function roomHtml(room, hits, hitRooms, anyQuery, preview) {
     var fk = focusKey && !editing && focusKey === room.id + "/";
     var cls = "room" + (room.kind === "place" ? " place" : "") + (anyQuery && !hitRooms[room.id] ? " dim" : "") +
       (hitRooms[room.id] && !editing ? " has-hit" : "") + (fk ? " focus" : "");
-    var size = 'width:' + (room.w * S) + 'px;aspect-ratio:' + room.w + '/' + room.h;
+    var size = '--pw:' + (room.w * S) + 'px;aspect-ratio:' + room.w + '/' + room.h;
     if (room.kind === "place") {
       return '<section class="' + cls + '" data-room="' + esc(room.id) + '"><div class="plan" style="' + size + '"><span class="pname">' + esc(room.label) + '</span></div></section>';
     }
@@ -347,7 +429,7 @@ body.swapping .desk{cursor:crosshair}
         (d.name && /[A-Za-z]/.test(d.name) && d.name.length > 5 ? " long" : "") +
         (!editing && hits[k] ? " hit" : "") + (!editing && k === focusKey ? " focus" + (pulseNext ? " pulse" : "") : "") +
         (editing && selected === k ? " sel" : "");
-      var tag = editing ? "button" : "div";
+      var tag = editing && !preview ? "button" : "div";
       html += "<" + tag + ' class="' + c + '" data-k="' + esc(k) + '"' + (editing ? ' type="button"' : "") +
         ' style="left:' + (d.x / room.w * 100) + "%;top:" + (d.y / room.h * 100) + "%;width:" + (d.w / room.w * 100) + "%;height:" + (d.h / room.h * 100) + '%"' +
         ' title="' + esc(d.name ? d.name + " (" + room.label + ")" : "빈 자리") + '"' +
@@ -377,11 +459,18 @@ body.swapping .desk{cursor:crosshair}
       });
       return h + '</div></div></div>';
     }
+    if (!editing && cur().layout) html += '<div class="browse-map"><p class="sec-label">층 안내도. 방을 누르면 그 방으로 이동해요.</p>' + miniMap(null, true) + '</div>';
     layout.sections.forEach(function (sec) { html += section(sec); });
     var rest = all.filter(function (r) { return !used[r.id]; }).map(function (r) { return r.id; });
     if (rest.length) html += section({ rows: [rest] });
     var wrap = document.getElementById("rooms");
     wrap.innerHTML = html;
+    Array.prototype.forEach.call(wrap.querySelectorAll("[data-go]"), function (g) {
+      g.addEventListener("click", function () {
+        var t = wrap.querySelector('.room[data-room="' + CSS.escape(g.getAttribute("data-go")) + '"]');
+        if (t && getComputedStyle(t).display !== "none") t.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
     pulseNext = false;
     if (editing) bindEditing(wrap);
   }
