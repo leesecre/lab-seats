@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>자리 찾기</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style id="app-style">
+:root{
+  --paper:#F3F5F4; --ink:#17252C; --muted:#5B6A71; --line:#17252C;
+  --floor:#E0E6E4; --desk:#FFFFFF; --empty:#F3F5F4;
+  --sign:#F5C518; --sign-ink:#17252C; --plate:#17252C; --plate-ink:#FFFFFF;
+  --focus:#2F6FDB; --danger:#B3261E;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1A1F; --ink:#E6ECEA; --muted:#93A3A9; --line:#C9D3D0;
+    --floor:#1B2A30; --desk:#26363D; --empty:#16242A;
+    --plate:#E6ECEA; --plate-ink:#0E1A1F; --focus:#7FA9F5; --danger:#F2B8B5;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1A1F; --ink:#E6ECEA; --muted:#93A3A9; --line:#C9D3D0;
+  --floor:#1B2A30; --desk:#26363D; --empty:#16242A;
+  --plate:#E6ECEA; --plate-ink:#0E1A1F; --focus:#7FA9F5; --danger:#F2B8B5;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 120px}
+
+/* header */
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 24px;align-items:end;margin-bottom:22px}
+.top h1{margin:0;font-size:15px;font-weight:600;letter-spacing:.01em}
+.top .meta{margin:0;color:var(--muted);font-size:13px}
+.tools{display:flex;gap:8px;align-items:center}
+.btn{border:1.5px solid var(--line);background:transparent;border-radius:6px;padding:7px 14px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--floor)}
+a.btn{text-decoration:none;color:inherit;display:inline-block}
+.btn.primary{background:var(--plate);color:var(--plate-ink);border-color:var(--plate)}
+.btn.primary:hover{filter:brightness(1.15)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn[disabled]{opacity:.5;cursor:default}
+
+/* finder */
+.finder{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:18px 28px;align-items:stretch;margin-bottom:40px}
+.field{align-self:start}
+.field .box{position:relative}
+.field input{width:100%;border:2px solid var(--line);border-radius:10px;background:var(--desk);
+  padding:16px 18px 16px 50px;font-size:22px;font-weight:500;line-height:1.2;-webkit-appearance:none;appearance:none}
+.field input::placeholder{color:var(--muted);font-weight:400;font-size:17px}
+.field svg{position:absolute;left:17px;top:50%;transform:translateY(-50%);width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:2.2}
+.hint{margin:10px 2px 0;color:var(--muted);font-size:13px}
+kbd{font:inherit;font-size:12px;border:1px solid var(--muted);border-radius:4px;padding:0 5px}
+
+.answer{min-height:96px;display:flex;flex-direction:column;justify-content:center;gap:10px}
+.answer .idle{color:var(--muted);font-size:15px;margin:0}
+.answer .none{margin:0;font-size:15px}
+.plate{display:inline-flex;align-items:stretch;border-radius:10px;overflow:hidden;background:var(--plate);color:var(--plate-ink);align-self:flex-start;max-width:100%}
+.plate .who{background:var(--sign);color:var(--sign-ink);padding:14px 18px;display:flex;align-items:center;font-size:20px;font-weight:600;white-space:nowrap}
+.plate .where{padding:10px 22px 12px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.plate .where small{font-size:12px;opacity:.75}
+.plate .where b{font-size:40px;line-height:1.05;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.others{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:4px 12px;font-size:14px;cursor:pointer}
+.chip.on{background:var(--sign);border-color:var(--sign);color:var(--sign-ink);font-weight:600}
+.chip span{color:var(--muted);margin-left:6px}
+.chip.on span{color:inherit;opacity:.7}
+
+/* rooms */
+.rooms{display:flex;flex-direction:column;gap:48px}
+.sec-label{margin:0 0 10px;color:var(--muted);font-size:13px}
+.scroller{overflow-x:auto;overflow-y:visible;padding:10px 12px 12px;margin:-10px -12px -12px;-webkit-overflow-scrolling:touch}
+.floor{display:inline-flex;flex-direction:column;min-width:min-content}
+.frow{display:flex}
+.frow.above{align-items:flex-end}
+.frow.below{align-items:flex-start}
+.frow > .room + .room{margin-left:-2.5px}
+.gap{flex:none;align-self:stretch}
+.corridor{height:46px;display:flex;align-items:center;justify-content:center;border-left:2.5px solid var(--line);border-right:2.5px solid var(--line);
+  background:repeating-linear-gradient(90deg,transparent 0 18px,color-mix(in srgb,var(--line) 22%,transparent) 18px 30px) center/100% 1.5px no-repeat}
+.corridor span{background:var(--paper);padding:0 12px;color:var(--muted);font-size:13px;letter-spacing:.3em}
+.room{transition:opacity .2s;flex:none}
+.room.dim{opacity:.32}
+.rhead{display:flex;align-items:center;gap:10px;margin:0 0 8px;min-height:30px}
+.room h2{margin:0;display:inline-block;font-size:26px;font-weight:700;line-height:1.1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.room.has-hit h2{box-shadow:inset 0 -.32em 0 var(--sign)}
+.plan{position:relative;background:var(--floor);border:2.5px solid var(--line);flex:none}
+.plan svg.door{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.door path{fill:var(--paper);stroke:var(--line);stroke-width:1.5}
+.room.place .plan{display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;
+  background:repeating-linear-gradient(135deg,var(--paper) 0 7px,var(--floor) 7px 8.5px)}
+.pname{font-size:14px;font-weight:600;background:var(--paper);padding:2px 6px;line-height:1.3;word-break:keep-all}
+.room.place.has-hit .pname{background:var(--sign);color:var(--sign-ink)}
+.room.focus .plan{box-shadow:0 0 0 3px var(--paper),0 0 0 7px var(--sign);z-index:2}
+.desk{position:absolute;display:flex;align-items:center;justify-content:center;padding:1px;margin:0;
+  background:var(--desk);border:1.5px solid var(--line);border-radius:0;font-size:13px;line-height:1.15;
+  text-align:center;overflow:hidden;color:var(--ink);cursor:default}
+.desk span{display:block;max-width:100%;overflow-wrap:anywhere}
+.desk.v span{writing-mode:vertical-rl;max-height:100%;letter-spacing:.06em}
+.desk.long{font-size:10.5px}
+.desk.long span{letter-spacing:0}
+.desk.empty{background:var(--empty);border-style:dashed}
+.desk.hit{background:var(--sign);color:var(--sign-ink);font-weight:600;z-index:2}
+.desk.focus{z-index:3;box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--sign)}
+.desk.focus.pulse{animation:pulse 1.4s ease-out 2}
+@keyframes pulse{0%{box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--sign)}60%{box-shadow:0 0 0 3px var(--paper),0 0 0 18px transparent}100%{box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--sign)}}
+@media (prefers-reduced-motion:reduce){.desk.focus.pulse{animation:none}.room{transition:none}}
+.room.focus{position:relative;z-index:2}
+
+/* edit mode */
+body.editing .plan{background-image:radial-gradient(circle,color-mix(in srgb,var(--line) 28%,transparent) 1px,transparent 1.2px);background-size:12px 12px}
+body.editing .desk{cursor:grab;touch-action:none}
+body.editing .desk:hover{outline:2px solid var(--focus);outline-offset:-1px}
+.desk.sel{outline:3px solid var(--focus)!important;outline-offset:-1px;z-index:4}
+.desk.dragging{cursor:grabbing;opacity:.85;z-index:5}
+body.swapping .desk{cursor:crosshair}
+.room .add{font-size:12px;padding:3px 9px}
+
+.editbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--plate);color:var(--plate-ink);
+  padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+.editbar p{margin:0;font-size:14px;flex:1 1 220px;max-width:640px}
+.editbar .btn{border-color:var(--plate-ink);color:var(--plate-ink)}
+.editbar .btn:hover{background:rgba(127,127,127,.25)}
+.editbar .btn.primary{background:var(--sign);border-color:var(--sign);color:var(--sign-ink)}
+
+.panel{position:fixed;z-index:30;right:20px;bottom:calc(84px + env(safe-area-inset-bottom,0px));width:320px;max-width:calc(100% - 24px);
+  background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,.18)}
+.panel h3{margin:0 0 10px;font-size:15px;font-weight:600}
+.panel label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.panel input{width:100%;border:1.5px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--desk);font-size:17px}
+.panel .row{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.panel .row .btn{font-size:13px;padding:6px 10px}
+.panel .close{position:absolute;right:10px;top:8px;border:0;background:none;font-size:20px;line-height:1;cursor:pointer;padding:4px 6px;color:var(--muted)}
+
+.toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:40;background:var(--plate);color:var(--plate-ink);padding:10px 16px;border-radius:8px;font-size:14px;max-width:calc(100% - 32px)}
+
+@media (max-width:760px){
+  .wrap{padding:20px 16px 120px}
+  .finder{grid-template-columns:1fr;margin-bottom:28px}
+  .answer{min-height:0}
+  .plate .where b{font-size:32px}
+  .rooms{gap:32px 24px}
+  .panel{left:12px;right:12px;width:auto}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script id="seat-data" type="application/json">{"title":"2026 자리 배치도","source":"2026_자리_배치도.pptx","updatedAt":null,"rooms":[{"id":"r407","label":"407호","w":1.16,"h":2.44,"door":{"x":1.16,"y":2.43,"r":0.27,"q":"ul"},"desks":[{"id":"a1","x":0.49,"y":0.32,"w":0.67,"h":0.29,"name":"오창훈"},{"id":"a2","x":0,"y":0.73,"w":0.33,"h":0.63,"name":"박수빈"},{"id":"a3","x":0.83,"y":0.73,"w":0.33,"h":0.63,"name":"예현수"},{"id":"a4","x":0,"y":1.35,"w":0.33,"h":0.63,"name":"이창준"},{"id":"a5","x":0.83,"y":1.35,"w":0.33,"h":0.63,"name":"전종욱"}],"kind":"seats"},{"id":"r408","label":"408호","w":2.19,"h":2.9,"door":{"x":1.33,"y":0,"r":0.27,"q":"dr"},"desks":[{"id":"b1","x":1.41,"y":2.27,"w":0.33,"h":0.63,"name":"김홍진"},{"id":"b2","x":1.08,"y":2.27,"w":0.33,"h":0.63,"name":"김민주"},{"id":"b3","x":0.26,"y":2.27,"w":0.33,"h":0.63,"name":"정성훈"},{"id":"b4","x":1.52,"y":1.68,"w":0.67,"h":0.29,"name":"정시우"},{"id":"b5","x":0.59,"y":1.51,"w":0.67,"h":0.29,"name":"김수환"},{"id":"b6","x":0.26,"y":1.5,"w":0.33,"h":0.63,"name":"김윤성"},{"id":"b7","x":1.52,"y":1.12,"w":0.67,"h":0.29,"name":"전상인"},{"id":"b8","x":0.59,"y":0.76,"w":0.67,"h":0.29,"name":"한예림"},{"id":"b9","x":0.26,"y":0.75,"w":0.33,"h":0.63,"name":"구인회"},{"id":"b10","x":1.52,"y":0.46,"w":0.67,"h":0.29,"name":"곽찬신"},{"id":"b11","x":0.26,"y":0,"w":0.33,"h":0.63,"name":"황영민"}],"kind":"seats"},{"id":"r409","label":"409호","w":2.19,"h":2.9,"door":{"x":1.36,"y":0,"r":0.27,"q":"dr"},"desks":[{"id":"g1","x":1.64,"y":2.27,"w":0.33,"h":0.63,"name":"임승재"},{"id":"g2","x":1.31,"y":2.27,"w":0.33,"h":0.63,"name":"위준봉"},{"id":"g3","x":0.59,"y":2.27,"w":0.33,"h":0.63,"name":"최광훈"},{"id":"g4","x":0.26,"y":2.27,"w":0.33,"h":0.63,"name":"안준호"},{"id":"g5","x":0,"y":1.71,"w":0.67,"h":0.29,"name":"이재현"},{"id":"g6","x":1.52,"y":1.52,"w":0.67,"h":0.29,"name":"이유빈"},{"id":"g7","x":0.85,"y":1.52,"w":0.67,"h":0.29,"name":"조재홍"},{"id":"g8","x":1.52,"y":1.23,"w":0.67,"h":0.29,"name":"김정현"},{"id":"g9","x":0,"y":1.11,"w":0.67,"h":0.29,"name":"이현재"},{"id":"g10","x":0,"y":0.81,"w":0.67,"h":0.29,"name":"최정원"},{"id":"g11","x":1.52,"y":0.55,"w":0.67,"h":0.29,"name":"최예원"},{"id":"g12","x":0.9,"y":0.01,"w":0.33,"h":0.63,"name":"김다은"},{"id":"g13","x":0,"y":0.02,"w":0.67,"h":0.29,"name":"허구슬"}],"kind":"seats"},{"id":"r410","label":"410호","w":2.19,"h":2.9,"door":{"x":0.91,"y":0,"r":0.27,"q":"dl"},"desks":[{"id":"c1","x":1.63,"y":2.27,"w":0.33,"h":0.63,"name":"정지용"},{"id":"c2","x":1.29,"y":2.27,"w":0.33,"h":0.63,"name":"엄창용"},{"id":"c3","x":0.58,"y":2.27,"w":0.33,"h":0.63,"name":"하승종"},{"id":"c4","x":0.24,"y":2.27,"w":0.33,"h":0.63,"name":"최상진"},{"id":"c5","x":1.52,"y":1.78,"w":0.67,"h":0.29,"name":"문시은"},{"id":"c6","x":0.68,"y":1.51,"w":0.67,"h":0.29,"name":"허진"},{"id":"c7","x":0.01,"y":1.51,"w":0.67,"h":0.29,"name":"조석민"},{"id":"c8","x":0.01,"y":1.22,"w":0.67,"h":0.29,"name":"김영욱"},{"id":"c9","x":1.52,"y":1.09,"w":0.67,"h":0.29,"name":"김남우"},{"id":"c10","x":1.52,"y":0.8,"w":0.67,"h":0.29,"name":""},{"id":"c11","x":0.01,"y":0.59,"w":0.67,"h":0.29,"name":"김익재"},{"id":"c12","x":1.0,"y":0,"w":0.33,"h":0.63,"name":""},{"id":"c13","x":1.52,"y":0.01,"w":0.67,"h":0.29,"name":"김주형"}],"kind":"seats"},{"id":"r411","label":"411호","w":2.19,"h":2.9,"door":{"x":1.31,"y":0,"r":0.27,"q":"dr"},"desks":[{"id":"e1","x":1.86,"y":2.27,"w":0.33,"h":0.63,"name":"이재환"},{"id":"e2","x":1.11,"y":2.27,"w":0.33,"h":0.63,"name":"황진우"},{"id":"e3","x":0.78,"y":2.27,"w":0.33,"h":0.63,"name":"김원웅"},{"id":"e4","x":0.01,"y":2.27,"w":0.33,"h":0.63,"name":"이상현"},{"id":"e5","x":0.01,"y":1.77,"w":0.67,"h":0.29,"name":"정재원"},{"id":"e6","x":1.52,"y":1.51,"w":0.67,"h":0.29,"name":"이상엽"},{"id":"e7","x":1.52,"y":1.22,"w":0.67,"h":0.29,"name":"이정인"},{"id":"e8","x":0.01,"y":1.1,"w":0.67,"h":0.29,"name":"이지민"},{"id":"e9","x":0.01,"y":0.8,"w":0.67,"h":0.29,"name":"정지영"},{"id":"e10","x":1.52,"y":0.59,"w":0.67,"h":0.29,"name":"김홍빈"},{"id":"e11","x":0.91,"y":0,"w":0.33,"h":0.63,"name":"최현민"},{"id":"e12","x":0.01,"y":0.01,"w":0.67,"h":0.29,"name":"이주현"}],"kind":"seats"},{"id":"r4413","label":"E3-1 4413호","w":2.68,"h":2.9,"door":{"x":0,"y":2.74,"r":0.27,"q":"ur"},"desks":[{"id":"f1","x":0,"y":0.23,"w":0.33,"h":0.63,"name":"Huanle Zhao"},{"id":"f2","x":1.0,"y":0,"w":0.33,"h":0.63,"name":"김동하"},{"id":"f3","x":1.34,"y":0,"w":0.33,"h":0.63,"name":"김민수"},{"id":"f4","x":2.01,"y":0,"w":0.67,"h":0.29,"name":""},{"id":"f5","x":1.34,"y":0.62,"w":0.33,"h":0.63,"name":"은승욱"},{"id":"f6","x":0,"y":1.2,"w":0.33,"h":0.63,"name":""},{"id":"f7","x":2.01,"y":1.21,"w":0.67,"h":0.29,"name":"Shuangshuang Zhao"},{"id":"f8","x":2.01,"y":1.51,"w":0.67,"h":0.29,"name":"김지훈"},{"id":"f9","x":0.95,"y":2.27,"w":0.33,"h":0.63,"name":""},{"id":"f10","x":1.69,"y":2.27,"w":0.33,"h":0.63,"name":"이장건"},{"id":"f11","x":2.01,"y":2.6,"w":0.67,"h":0.29,"name":"장민성"}],"kind":"seats"},{"id":"p-kwon","label":"권교수님방","kind":"place","w":1.1,"h":2.44,"desks":[]},{"id":"p-park","label":"박교수님방","kind":"place","w":1.1,"h":2.44,"desks":[]},{"id":"p-heo","label":"허교수님방","kind":"place","w":1.1,"h":2.44,"desks":[]},{"id":"p-admin","label":"행정실","kind":"place","w":1.2,"h":2.44,"desks":[]},{"id":"p-seminar","label":"세미나실","kind":"place","w":1.17,"h":2.44,"desks":[]}],"layout":{"sections":[{"rows":[[{"gap":1.97},"r407","p-kwon","p-park","p-heo","p-admin","p-seminar"],"corridor",["r408","r409","r410","r411"]]},{"label":"따로 떨어진 방","rows":[["r4413"]]}]},"homepage":{"label":"CASys Lab 홈페이지","url":"https://casyslab.kaist.ac.kr/home"},"advisors":{"이상현":"허","이주현":"허","정지영":"허","김홍빈":"허","이지민":"허","정재원":"허","이재환":"권","김원웅":"박","최현민":"박","이상엽":"박","이정인":"박","황진우":"박"},"advisorOrder":["권","박","허"]}</script>
+<script id="app-script">
+(function () {
+  "use strict";
+  var HEAD = '<meta charset="utf-8">\n' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' +
+    '<title>자리 찾기</title>\n' +
+    '<meta name="robots" content="noindex, nofollow">\n' +
+    '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">';
+  var S = 118; // px per inch of the original slide
+  var SCRIPT_END = "</" + "script>";
+
+  var data = JSON.parse(document.getElementById("seat-data").textContent);
+  var draft = null, editing = false, dirty = false;
+  var artifactNs = null, canWrite = false, offlineEdit = false;
+  var justDragged = false;
+  var selected = null, swapFrom = null, focusKey = null, pulseNext = false;
+  var app = document.getElementById("app");
+
+  function cur() { return editing ? draft : data; }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function findRoom(id) { return cur().rooms.filter(function (r) { return r.id === id; })[0]; }
+  function findDesk(rid, did) { var r = findRoom(rid); return r && r.desks.filter(function (d) { return d.id === did; })[0]; }
+  function r2(n) { return Math.round(n * 100) / 100; }
+
+  /* ---------- search ---------- */
+  var CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
+  function cho(ch) { var c = ch.charCodeAt(0) - 0xAC00; return c >= 0 && c < 11172 ? CHO[Math.floor(c / 588)] : ch; }
+  function norm(s) { return String(s).toLowerCase().replace(/\s+/g, ""); }
+  function isJamo(ch) { return CHO.indexOf(ch) >= 0; }
+  function matches(name, q) {
+    var n = Array.from(norm(name)), qq = Array.from(q);
+    if (!qq.length || !n.length) return false;
+    for (var i = 0; i + qq.length <= n.length; i++) {
+      var ok = true;
+      for (var j = 0; j < qq.length; j++) {
+        var a = n[i + j], b = qq[j];
+        if (a === b || (isJamo(b) && cho(a) === b)) continue;
+        // allow typing a syllable in progress, e.g. "기" while aiming for "김"
+        if (j === qq.length - 1 && /[가-힣]/.test(a) && /[가-힣]/.test(b) && (b.charCodeAt(0) - 0xAC00) % 28 === 0 &&
+          Math.floor((a.charCodeAt(0) - 0xAC00) / 28) === Math.floor((b.charCodeAt(0) - 0xAC00) / 28)) continue;
+        ok = false; break;
+      }
+      if (ok) return true;
+    }
+    return false;
+  }
+  function search(q) {
+    q = norm(q); var out = [];
+    if (!q) return out;
+    cur().rooms.forEach(function (r) {
+      r.desks.forEach(function (d) {
+        if (d.name && matches(d.name, q)) out.push({ room: r, desk: d, exact: norm(d.name) === q });
+      });
+    });
+    out.sort(function (a, b) { return (b.exact - a.exact) || a.desk.name.localeCompare(b.desk.name, "ko"); });
+    var rooms = [];
+    cur().rooms.forEach(function (r) {
+      var l = norm(r.label), bare = l.replace(/호$/, "");
+      if (l.indexOf(q) >= 0) rooms.push({ room: r, desk: null, exact: l === q || bare === q || bare.split(/[-\s]/).pop() === q });
+    });
+    rooms.sort(function (a, b) { return b.exact - a.exact; });
+    if (rooms.length && rooms[0].exact) return rooms.concat(out);
+    return out.concat(rooms);
+  }
+  function key(r, d) { return r.id + "/" + (d ? d.id : ""); }
+
+  /* ---------- shell ---------- */
+  function stats() {
+    var n = 0, e = 0; cur().rooms.forEach(function (r) { r.desks.forEach(function (d) { d.name ? n++ : e++; }); });
+    return { n: n, e: e, rooms: cur().rooms.filter(function (r) { return r.kind !== "place"; }).length };
+  }
+  function fmtDate(iso) {
+    var d = new Date(iso); if (isNaN(d)) return "";
+    return d.getFullYear() + "년 " + (d.getMonth() + 1) + "월 " + d.getDate() + "일";
+  }
+  function buildShell() {
+    app.innerHTML =
+      '<div class="wrap">' +
+      '<header class="top"><div><h1></h1><p class="meta" id="meta"></p></div><div class="tools" id="tools"></div></header>' +
+      '<section class="finder" aria-label="이름 검색">' +
+      '<div class="field"><div class="box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>' +
+      '<input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="이름을 입력하세요" aria-label="학생 이름"></div>' +
+      '<p class="hint">초성으로도 찾을 수 있어요. 예: ㄱㄷㅎ. 어디서든 <kbd>/</kbd> 키로 검색창에 갈 수 있습니다.</p></div>' +
+      '<div class="answer" id="answer" aria-live="polite"></div>' +
+      '</section>' +
+      '<main class="rooms" id="rooms"></main>' +
+      '</div>' +
+      '<div id="editbar-slot"></div><div id="panel-slot"></div>';
+    app.querySelector("h1").textContent = data.title || "자리 배치도";
+    var q = document.getElementById("q");
+    q.addEventListener("input", function () { focusKey = null; pulseNext = true; update(true); });
+    q.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { var res = search(q.value); if (res.length) { focusKey = key(res[0].room, res[0].desk); pulseNext = true; update(true, true); } }
+      if (e.key === "Escape") { q.value = ""; focusKey = null; update(); }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "/" && document.activeElement && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); q.focus(); q.select(); }
+    });
+  }
+
+  function renderMeta() {
+    var st = stats(), parts = st.rooms + "개 방, " + st.n + "명";
+    if (st.e) parts += ", 빈 자리 " + st.e + "개";
+    var when = data.updatedAt ? fmtDate(data.updatedAt) + " 수정" : "원본 " + (data.source || "");
+    document.getElementById("meta").textContent = parts + ". " + when;
+    var tools = document.getElementById("tools");
+    tools.innerHTML = "";
+    if (data.homepage && /^https?:\/\//.test(data.homepage.url)) {
+      var hp = document.createElement("a"); hp.className = "btn"; hp.href = data.homepage.url;
+      hp.target = "_blank"; hp.rel = "noopener"; hp.textContent = (data.homepage.label || "홈페이지") + " ↗";
+      tools.appendChild(hp);
+    }
+    if (canWrite && !editing) {
+      var b = document.createElement("button"); b.className = "btn"; b.textContent = "자리 편집";
+      b.addEventListener("click", startEdit); tools.appendChild(b);
+    }
+  }
+
+  /* ---------- answer ---------- */
+  var lastScrolled = null;
+  function update(fromTyping, forceScroll) {
+    var q = document.getElementById("q").value;
+    var res = search(q);
+    if (res.length && !res.some(function (r) { return key(r.room, r.desk) === focusKey; })) focusKey = key(res[0].room, res[0].desk);
+    if (!res.length) focusKey = null;
+    renderAnswer(q, res);
+    renderRooms(res);
+    if (focusKey && (forceScroll || (fromTyping && res.length === 1 && lastScrolled !== focusKey))) scrollToFocus();
+  }
+  function renderAnswer(q, res) {
+    var el = document.getElementById("answer");
+    if (!norm(q)) { el.innerHTML = '<p class="idle">이름을 입력하면 어느 방, 어느 자리인지 바로 보여줍니다.</p>'; return; }
+    if (!res.length) { el.innerHTML = '<p class="none">‘' + esc(q.trim()) + '’와 일치하는 이름이 없습니다. 철자를 확인하거나 성만 입력해 보세요.</p>'; return; }
+    var f = res.filter(function (r) { return key(r.room, r.desk) === focusKey; })[0] || res[0];
+    var label = f.room.label, m = /^(.*\S)\s+(\S+)$/.exec(label);
+    var html = '<div class="plate">' + (f.desk ? '<div class="who">' + esc(f.desk.name) + '</div>' : '') + '<div class="where">' +
+      (m ? '<small>' + esc(m[1]) + '</small><b>' + esc(m[2]) + '</b>' : '<b>' + esc(label) + '</b>') + '</div></div>';
+    if (res.length > 1) {
+      html += '<div class="others">';
+      res.slice(0, 12).forEach(function (r) {
+        var k = key(r.room, r.desk);
+        html += '<button class="chip' + (k === focusKey ? " on" : "") + '" data-k="' + esc(k) + '">' + (r.desk ? esc(r.desk.name) + '<span>' + esc(r.room.label) + '</span>' : esc(r.room.label)) + '</button>';
+      });
+      if (res.length > 12) html += '<span class="hint" style="margin:0 4px">외 ' + (res.length - 12) + '명</span>';
+      html += '</div>';
+    }
+    el.innerHTML = html;
+    Array.prototype.forEach.call(el.querySelectorAll(".chip"), function (c) {
+      c.addEventListener("click", function () { focusKey = c.getAttribute("data-k"); pulseNext = true; update(false, true); });
+    });
+  }
+  function scrollToFocus() {
+    var d = document.querySelector('.desk[data-k="' + CSS.escape(focusKey) + '"]') ||
+      document.querySelector('.room[data-room="' + CSS.escape(focusKey.split("/")[0]) + '"] .plan');
+    if (!d) return; lastScrolled = focusKey;
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    d.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: window.innerWidth < 760 ? "center" : "nearest", inline: "center" });
+  }
+
+  /* ---------- rooms ---------- */
+  function doorPath(dr) {
+    var x = dr.x, y = dr.y, r = dr.r, top = (y - r);
+    if (dr.q === "dr") return "M" + x + " " + y + " L" + x + " " + (y + r) + " A" + r + " " + r + " 0 0 0 " + (x + r) + " " + y + " Z";
+    if (dr.q === "dl") return "M" + x + " " + y + " L" + x + " " + (y + r) + " A" + r + " " + r + " 0 0 1 " + (x - r) + " " + y + " Z";
+    if (dr.q === "ur") return "M" + x + " " + y + " L" + x + " " + top + " A" + r + " " + r + " 0 0 1 " + (x + r) + " " + y + " Z";
+    return "M" + x + " " + y + " L" + x + " " + top + " A" + r + " " + r + " 0 0 0 " + (x - r) + " " + y + " Z";
+  }
+  function roomHtml(room, hits, hitRooms, anyQuery) {
+    var fk = focusKey && !editing && focusKey === room.id + "/";
+    var cls = "room" + (room.kind === "place" ? " place" : "") + (anyQuery && !hitRooms[room.id] ? " dim" : "") +
+      (hitRooms[room.id] && !editing ? " has-hit" : "") + (fk ? " focus" : "");
+    var size = 'width:' + (room.w * S) + 'px;aspect-ratio:' + room.w + '/' + room.h;
+    if (room.kind === "place") {
+      return '<section class="' + cls + '" data-room="' + esc(room.id) + '"><div class="plan" style="' + size + '"><span class="pname">' + esc(room.label) + '</span></div></section>';
+    }
+    var html = '<section class="' + cls + '" data-room="' + esc(room.id) + '"><div class="rhead"><h2>' + esc(room.label) + '</h2>' +
+      (editing ? '<button class="btn add" type="button" data-add="' + esc(room.id) + '">책상 추가</button>' : '') + '</div>' +
+      '<div class="plan" style="' + size + '">';
+    if (room.door) html += '<svg class="door" viewBox="0 0 ' + room.w + ' ' + room.h + '" preserveAspectRatio="none" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="' + doorPath(room.door) + '"/></svg>';
+    room.desks.forEach(function (d) {
+      var k = key(room, d), v = d.h > d.w;
+      var c = "desk " + (v ? "v" : "h") + (d.name ? "" : " empty") +
+        (d.name && /[A-Za-z]/.test(d.name) && d.name.length > 5 ? " long" : "") +
+        (!editing && hits[k] ? " hit" : "") + (!editing && k === focusKey ? " focus" + (pulseNext ? " pulse" : "") : "") +
+        (editing && selected === k ? " sel" : "");
+      var tag = editing ? "button" : "div";
+      html += "<" + tag + ' class="' + c + '" data-k="' + esc(k) + '"' + (editing ? ' type="button"' : "") +
+        ' style="left:' + (d.x / room.w * 100) + "%;top:" + (d.y / room.h * 100) + "%;width:" + (d.w / room.w * 100) + "%;height:" + (d.h / room.h * 100) + '%"' +
+        ' title="' + esc(d.name ? d.name + " (" + room.label + ")" : "빈 자리") + '"' +
+        (editing ? ' aria-label="' + esc(room.label + " " + (d.name || "빈 자리")) + '"' : "") +
+        "><span>" + esc(d.name) + "</span></" + tag + ">";
+    });
+    return html + "</div></section>";
+  }
+  function renderRooms(res) {
+    res = res || [];
+    var hits = {}, hitRooms = {};
+    res.forEach(function (r) { if (r.desk) hits[key(r.room, r.desk)] = 1; hitRooms[r.room.id] = 1; });
+    var anyQuery = norm(document.getElementById("q").value).length > 0 && res.length > 0 && !editing;
+    var all = cur().rooms, used = {};
+    var layout = cur().layout || { sections: [{ rows: [all.map(function (r) { return r.id; })] }] };
+    var html = "";
+    function section(sec) {
+      var h = '<div class="section">' + (sec.label ? '<p class="sec-label">' + esc(sec.label) + '</p>' : '') + '<div class="scroller"><div class="floor">';
+      var below = false;
+      sec.rows.forEach(function (row) {
+        if (row === "corridor") { below = true; h += '<div class="corridor"><span>복도</span></div>'; return; }
+        h += '<div class="frow ' + (below ? "below" : "above") + '">';
+        row.forEach(function (id) {
+          if (id && typeof id === "object") { h += '<div class="gap" style="width:' + (id.gap * S) + 'px" aria-hidden="true"></div>'; return; }
+          var r = findRoom(id); if (r) { used[id] = 1; h += roomHtml(r, hits, hitRooms, anyQuery); } });
+        h += '</div>';
+      });
+      return h + '</div></div></div>';
+    }
+    layout.sections.forEach(function (sec) { html += section(sec); });
+    var rest = all.filter(function (r) { return !used[r.id]; }).map(function (r) { return r.id; });
+    if (rest.length) html += section({ rows: [rest] });
+    var wrap = document.getElementById("rooms");
+    wrap.innerHTML = html;
+    pulseNext = false;
+    if (editing) bindEditing(wrap);
+  }
+
+  /* ---------- editing ---------- */
+  function startEdit() {
+    draft = clone(data); editing = true; dirty = false; selected = null; swapFrom = null;
+    document.body.classList.add("editing");
+    renderAll();
+  }
+  function stopEdit() {
+    if (dirty && !confirm("저장하지 않은 변경사항이 사라집니다. 편집을 끝낼까요?")) return;
+    editing = false; draft = null; dirty = false; selected = null; swapFrom = null;
+    document.body.classList.remove("editing", "swapping");
+    renderAll();
+  }
+  function markDirty() { dirty = true; renderEditbar(); }
+  function renderAll() { renderMeta(); update(); renderEditbar(); renderPanel(); }
+
+  function renderEditbar() {
+    var slot = document.getElementById("editbar-slot");
+    if (!editing) { slot.innerHTML = ""; return; }
+    var msg = swapFrom ? "맞바꿀 자리를 누르세요. 다른 방의 자리도 됩니다." :
+      "책상을 눌러 이름을 바꾸고, 끌어서 위치를 옮기세요." + (dirty ? " 저장하지 않은 변경사항이 있습니다." : "") +
+      (offlineEdit ? " 다 고쳤으면 파일로 내려받아 서버의 파일을 덮어쓰세요." : "");
+    slot.innerHTML = '<div class="editbar" role="region" aria-label="편집"><p>' + esc(msg) + '</p>' +
+      (swapFrom ? '<button class="btn" id="swap-cancel">맞바꾸기 취소</button>' :
+        '<button class="btn" id="edit-cancel">편집 끝내기</button><button class="btn primary" id="edit-save"' + (dirty ? "" : " disabled") + '>' + (offlineEdit ? "파일로 내려받기" : "저장") + '</button>') + '</div>';
+    var c = document.getElementById("edit-cancel"); if (c) c.addEventListener("click", stopEdit);
+    var s = document.getElementById("edit-save"); if (s) s.addEventListener("click", save);
+    var sc = document.getElementById("swap-cancel"); if (sc) sc.addEventListener("click", function () { swapFrom = null; document.body.classList.remove("swapping"); renderEditbar(); renderPanel(); });
+  }
+
+  function renderPanel() {
+    var slot = document.getElementById("panel-slot");
+    if (!editing || !selected || swapFrom) { slot.innerHTML = ""; return; }
+    var p = selected.split("/"), room = findRoom(p[0]), d = findDesk(p[0], p[1]);
+    if (!d) { slot.innerHTML = ""; return; }
+    var v = d.h > d.w;
+    slot.innerHTML = '<div class="panel" role="dialog" aria-label="자리 편집"><button class="close" id="p-close" aria-label="닫기">×</button>' +
+      '<h3>' + esc(room.label) + ' 책상</h3>' +
+      '<label for="p-name">이름</label><input id="p-name" autocomplete="off" placeholder="비워 두면 빈 자리">' +
+      '<div class="row">' +
+      '<button class="btn" id="p-swap">다른 자리와 맞바꾸기</button>' +
+      '<button class="btn" id="p-clear">비우기</button>' +
+      '<button class="btn" id="p-rot">' + (v ? "가로로 놓기" : "세로로 놓기") + '</button>' +
+      '<button class="btn danger" id="p-del">책상 삭제</button>' +
+      '</div></div>';
+    var inp = document.getElementById("p-name");
+    inp.value = d.name;
+    inp.addEventListener("input", function () { d.name = inp.value.trim(); markDirty(); renderRooms(); });
+    inp.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === "Escape") { selected = null; renderPanel(); renderRooms(); } });
+    document.getElementById("p-close").addEventListener("click", function () { selected = null; renderPanel(); renderRooms(); });
+    document.getElementById("p-clear").addEventListener("click", function () { d.name = ""; inp.value = ""; markDirty(); renderRooms(); });
+    document.getElementById("p-swap").addEventListener("click", function () {
+      swapFrom = selected; document.body.classList.add("swapping"); renderPanel(); renderEditbar();
+    });
+    document.getElementById("p-rot").addEventListener("click", function () {
+      var w = d.w; d.w = d.h; d.h = w;
+      d.x = r2(Math.min(Math.max(0, d.x), room.w - d.w)); d.y = r2(Math.min(Math.max(0, d.y), room.h - d.h));
+      markDirty(); renderRooms(); renderPanel();
+    });
+    document.getElementById("p-del").addEventListener("click", function () {
+      if (d.name && !confirm("‘" + d.name + "’ 책상을 삭제할까요?")) return;
+      room.desks = room.desks.filter(function (x) { return x !== d; });
+      selected = null; markDirty(); renderRooms(); renderPanel(); renderMeta();
+    });
+    if (window.matchMedia("(pointer:fine)").matches) inp.focus();
+  }
+
+  function bindEditing(wrap) {
+    Array.prototype.forEach.call(wrap.querySelectorAll("[data-add]"), function (b) {
+      b.addEventListener("click", function () {
+        var room = findRoom(b.getAttribute("data-add"));
+        var d = { id: "d" + Date.now().toString(36), w: 0.67, h: 0.29, name: "" };
+        d.x = r2((room.w - d.w) / 2); d.y = r2((room.h - d.h) / 2);
+        room.desks.push(d); selected = key(room, d); markDirty(); renderRooms(); renderPanel(); renderMeta();
+      });
+    });
+    Array.prototype.forEach.call(wrap.querySelectorAll(".desk"), function (el) {
+      var k = el.getAttribute("data-k"), p = k.split("/");
+      var start = null;
+      el.addEventListener("pointerdown", function (e) {
+        if (swapFrom || e.button > 0) return;
+        var room = findRoom(p[0]), d = findDesk(p[0], p[1]);
+        var rect = el.parentNode.getBoundingClientRect();
+        start = { x: e.clientX, y: e.clientY, dx: d.x, dy: d.y, ppi: rect.width / room.w, moved: false, room: room, d: d };
+        el.setPointerCapture(e.pointerId);
+      });
+      el.addEventListener("pointermove", function (e) {
+        if (!start) return;
+        var mx = e.clientX - start.x, my = e.clientY - start.y;
+        if (!start.moved && Math.abs(mx) + Math.abs(my) < 5) return;
+        start.moved = true; el.classList.add("dragging");
+        var room = start.room, d = start.d;
+        var nx = Math.min(Math.max(0, start.dx + mx / start.ppi), room.w - d.w);
+        var ny = Math.min(Math.max(0, start.dy + my / start.ppi), room.h - d.h);
+        start.nx = r2(nx); start.ny = r2(ny);
+        el.style.left = (start.nx / room.w * 100) + "%"; el.style.top = (start.ny / room.h * 100) + "%";
+      });
+      function end() {
+        if (!start) return;
+        if (start.moved) { justDragged = true; setTimeout(function () { justDragged = false; }, 0); }
+        var s = start; start = null;
+        if (s.moved) {
+          if (s.nx !== undefined) { s.d.x = s.nx; s.d.y = s.ny; markDirty(); }
+          selected = k; renderRooms(); renderPanel();
+        }
+      }
+      el.addEventListener("pointerup", end);
+      el.addEventListener("pointercancel", function () { if (start) { start = null; renderRooms(); } });
+      el.addEventListener("click", function () {
+        if (justDragged || el.classList.contains("dragging")) return;
+        if (swapFrom) {
+          if (swapFrom !== k) {
+            var a = swapFrom.split("/"), da = findDesk(a[0], a[1]), db = findDesk(p[0], p[1]);
+            var t = da.name; da.name = db.name; db.name = t; markDirty();
+            toast((db.name || "빈 자리") + " ↔ " + (da.name || "빈 자리") + " 맞바꿨습니다.");
+          }
+          swapFrom = null; selected = k; document.body.classList.remove("swapping");
+          renderRooms(); renderEditbar(); renderPanel(); return;
+        }
+        selected = selected === k ? null : k; renderRooms(); renderPanel();
+      });
+      el.addEventListener("keydown", function (e) {
+        if (!/^Arrow/.test(e.key)) return;
+        e.preventDefault();
+        var room = findRoom(p[0]), d = findDesk(p[0], p[1]), st = e.shiftKey ? 0.1 : 0.02;
+        if (e.key === "ArrowLeft") d.x -= st; if (e.key === "ArrowRight") d.x += st;
+        if (e.key === "ArrowUp") d.y -= st; if (e.key === "ArrowDown") d.y += st;
+        d.x = r2(Math.min(Math.max(0, d.x), room.w - d.w)); d.y = r2(Math.min(Math.max(0, d.y), room.h - d.h));
+        markDirty(); selected = k; renderRooms(); var n = document.querySelector('.desk[data-k="' + CSS.escape(k) + '"]'); if (n) n.focus();
+      });
+    });
+  }
+
+  var toastTimer;
+  function toast(msg, ms) {
+    var t = document.querySelector(".toast"); if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+    t.textContent = msg; clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.remove(); }, ms || 2600);
+  }
+
+  /* ---------- save = publish a new version of this page ---------- */
+  function safeJson(o) { return JSON.stringify(o).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029"); }
+  function buildPage(d) {
+    var css = document.getElementById("app-style").textContent;
+    var js = document.getElementById("app-script").textContent;
+    return "<!doctype html>\n<html lang=\"ko\">\n<head>\n" + HEAD + "\n<style id=\"app-style\">" + css + "</style>\n</head>\n<body>\n<div id=\"app\"></div>\n" +
+      "<script id=\"seat-data\" type=\"application/json\">" + safeJson(d) + SCRIPT_END + "\n" +
+      "<script id=\"app-script\">" + js + SCRIPT_END + "\n</body>\n</html>\n";
+  }
+  function save() {
+    var btn = document.getElementById("edit-save");
+    var next = clone(draft); next.updatedAt = new Date().toISOString();
+    next.rooms.forEach(function (r) { r.desks.forEach(function (d) { d.name = (d.name || "").trim(); }); });
+    if (!artifactNs) {
+      if (!offlineEdit) return;
+      var blob = new Blob([buildPage(next)], { type: "text/html" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = "seat-finder.html";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+      data = next; dirty = false;
+      toast("파일을 내려받았습니다. 서버의 기존 파일을 이 파일로 덮어쓰면 반영됩니다.", 5000);
+      renderEditbar(); renderMeta();
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = "저장 중…"; }
+    artifactNs.publish(buildPage(next)).then(function () {
+      dirty = false; toast("저장했습니다. 새 배치를 불러옵니다.");
+    }, function (err) {
+      var code = err && err.code;
+      if (code === "conflict") { dirty = false; toast("다른 사람이 먼저 저장했습니다. 최신 배치를 불러오니 다시 편집해 주세요.", 5000); return; }
+      if (code === "not_writer" || code === "not_granted" || code === "not_declared" || code === "consent_required" || code === "capability_disabled" || code === "capability_removed") {
+        canWrite = false; dirty = false; editing = false; draft = null; document.body.classList.remove("editing", "swapping");
+        renderAll(); toast("이 페이지는 보기 전용입니다. 자리를 바꾸려면 소유자에게 편집 권한을 요청하세요.", 5000); return;
+      }
+      if (code === "rate_limited") toast("저장이 너무 잦습니다. 잠시 후 다시 저장하세요.", 4000);
+      else toast("저장하지 못했습니다. 잠시 후 다시 시도하세요." + (code ? " (" + code + ")" : ""), 4000);
+      if (btn) { btn.disabled = false; btn.textContent = "저장"; }
+    });
+  }
+  window.addEventListener("beforeunload", function (e) { if (editing && dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+  /* ---------- boot ---------- */
+  buildShell();
+  renderAll();
+
+  if (!(window.claude && typeof window.claude.use === "function")) {
+    if (/(^|[?&])edit(=|&|$)/.test(location.search)) { offlineEdit = true; canWrite = true; renderMeta(); }
+  }
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("artifact").then(function (ns) {
+      if (!ns) return;
+      artifactNs = ns;
+      return window.claude.use("user").then(function (u) {
+        if (!u) return true;
+        return u.canEdit();
+      }, function () { return true; }).then(function (ok) {
+        canWrite = !!ok; renderMeta();
+      });
+    }).catch(function () { });
+  }
+})();
+</script>
+</body>
+</html>
